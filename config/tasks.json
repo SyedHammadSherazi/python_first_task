@@ -1,0 +1,23 @@
+{
+  "tasks": [
+    {
+      "name": "backup_task",
+      "type": "python",
+      "schedule": {
+        "mode": "interval",
+        "every": 60,
+        "unit": "seconds"
+      },
+      "file_path": "tasks/scripts/backup.py"
+    },
+    {
+      "name": "report_task",
+      "type": "python",
+      "schedule": {
+        "mode": "daily",
+        "time": "09:00"
+      },
+      "file_path": "tasks/scripts/report.py"
+    }
+  ]
+}

@@ -6,6 +6,7 @@ from scheduler.job_scheduler import (
     stop_scheduler,
     get_scheduler_status,
 )
+from config.config_parser import load_config
 from config.settings import APP_NAME, APP_VERSION
 
 
@@ -21,13 +22,16 @@ Examples:
   python main.py status
   python main.py run-task email
   python main.py run-task report
+  python main.py validate-config
+  python main.py validate-config --config config/tasks.yaml
   python main.py --version
 
 Description:
-  start       Start the scheduler
-  stop        Stop the scheduler
-  status      Check scheduler status
-  run-task    Run a specific task manually
+  start             Start the scheduler
+  stop              Stop the scheduler
+  status            Check scheduler status
+  run-task          Run a specific task manually
+  validate-config   Validate JSON/YAML config file
 """,
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -100,6 +104,26 @@ Examples:
         help="Name of the task to run. Example: email, report, backup"
     )
 
+    # Validate config command
+    validate_parser = subparsers.add_parser(
+        "validate-config",
+        help="Validate JSON/YAML config file",
+        description="Validate task config file and show clear errors for missing or invalid fields.",
+        epilog="""
+Examples:
+  python main.py validate-config
+  python main.py validate-config --config config/tasks.json
+  python main.py validate-config --config config/tasks.yaml
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    validate_parser.add_argument(
+        "--config",
+        default="config/tasks.json",
+        help="Config file path. Default: config/tasks.json"
+    )
+
     args = parser.parse_args()
 
     if args.command == "start":
@@ -113,6 +137,15 @@ Examples:
 
     elif args.command == "run-task":
         run_task(args.task_name)
+
+    elif args.command == "validate-config":
+        try:
+            config_data = load_config(args.config)
+            print("Config is valid.")
+            print(f"Total tasks found: {len(config_data['tasks'])}")
+
+        except Exception as error:
+            print(f"Config error: {error}")
 
     else:
         parser.print_help()
