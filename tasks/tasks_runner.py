@@ -1,14 +1,16 @@
+from utils.logger import get_logger
+logger = get_logger(__name__)
 def run_task(task_name):
-    print(f"Running task: {task_name}")
+    logger.info(f"Running task: {task_name}")
 
     if task_name == "email":
-        print("Email task started...")
+        logger.info("Email task started...")
 
     elif task_name == "report":
-        print("Report task started...")
+        logger.info("Report task started...")
 
     elif task_name == "backup":
-        print("Backup task started...")
+        logger.info("Backup task started...")
 
     else:
-        print(f"Unknown task: {task_name}")
+        logger.warning(f"Unknown task: {task_name}")
