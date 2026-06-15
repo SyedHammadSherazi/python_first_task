@@ -22,10 +22,12 @@ def main():
 Examples:
   python main.py start
   python main.py start --interval 10
+  python main.py start --every-minutes 1
+  python main.py start --daily-time 09:30
+  python main.py start --every-minutes 5 --task-name file
   python main.py stop
   python main.py status
-  python main.py run-task email
-  python main.py run-task report
+  python main.py run-task file
   python main.py validate-config
   python main.py validate-config --config config/tasks.yaml
   python main.py --version
@@ -37,7 +39,7 @@ Description:
   run-task          Run a specific task manually
   validate-config   Validate JSON/YAML config file
 """,
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
@@ -45,14 +47,14 @@ Description:
         "--version",
         action="version",
         version=f"{APP_NAME} {APP_VERSION}",
-        help="Show application version"
+        help="Show application version",
     )
 
     subparsers = parser.add_subparsers(
         dest="command",
         title="Commands",
         description="Available commands",
-        help="Use one of these commands"
+        help="Use one of these commands",
     )
 
     start_parser = subparsers.add_parser(
@@ -65,19 +67,45 @@ Description:
         "--interval",
         type=int,
         default=60,
-        help="Scheduler interval in seconds. Default is 60 seconds."
+        help="Scheduler interval in seconds. Default is 60 seconds.",
     )
 
+    start_parser.add_argument(
+        "--every-minutes",
+        type=int,
+        default=None,
+        help="Run scheduler every X minutes. Example: --every-minutes 5",
+    )
+
+    start_parser.add_argument(
+        "--daily-time",
+        type=str,
+        default=None,
+        help="Run scheduler daily at specific time. Format: HH:MM. Example: --daily-time 09:30",
+    )
+
+    start_parser.add_argument(
+        "--task-name",
+        type=str,
+        default="file",
+        help="Task name to run in scheduler. Default: file",
+    )
+    start_parser.add_argument(
+        "--config",
+        type=str,
+        default="config/tasks.json",
+        help="Scheduler config file path. Default: config/tasks.json",
+    )
     subparsers.add_parser(
         "stop",
         help="Stop the scheduler",
-        description="Stop the currently running scheduler."
+        description="Stop the currently running scheduler.",
     )
 
     subparsers.add_parser(
         "status",
         help="Check scheduler status",
-        description="Check whether the scheduler is running or stopped."
+        description="Check whether the scheduler is running or stopped.",
     )
 
     run_task_parser = subparsers.add_parser(
@@ -88,19 +116,19 @@ Description:
 
     run_task_parser.add_argument(
         "task_name",
-        help="Name of the task to run. Example: email, report, backup"
+        help="Name of the task to run. Example: file",
     )
 
     validate_parser = subparsers.add_parser(
         "validate-config",
         help="Validate JSON/YAML config file",
-        description="Validate task config file and show clear errors."
+        description="Validate task config file and show clear errors.",
     )
 
     validate_parser.add_argument(
         "--config",
         default="config/tasks.json",
-        help="Config file path. Default: config/tasks.json"
+        help="Config file path. Default: config/tasks.json",
     )
 
     args = parser.parse_args()
@@ -108,7 +136,15 @@ Description:
     try:
         if args.command == "start":
             logger.info("COMMAND STARTED | start")
-            start_scheduler(args.interval)
+
+            start_scheduler(
+                interval=args.interval,
+                task_name=args.task_name,
+                every_minutes=args.every_minutes,
+                daily_time=args.daily_time,
+                config_path=args.config,
+            )
+
             logger.info("COMMAND COMPLETED | start")
 
         elif args.command == "stop":
@@ -122,7 +158,9 @@ Description:
             logger.info("COMMAND COMPLETED | status")
 
         elif args.command == "run-task":
+            logger.info(f"COMMAND STARTED | run-task | Task: {args.task_name}")
             run_task(args.task_name)
+            logger.info(f"COMMAND COMPLETED | run-task | Task: {args.task_name}")
 
         elif args.command == "validate-config":
             logger.info(f"COMMAND STARTED | validate-config | File: {args.config}")

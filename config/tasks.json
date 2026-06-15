@@ -1,23 +1,25 @@
 {
   "tasks": [
     {
-      "name": "backup_task",
+      "name": "file",
       "type": "python",
+      "file_path": "tasks/scripts/sample.txt",
+      "enabled": true,
       "schedule": {
         "mode": "interval",
-        "every": 60,
-        "unit": "seconds"
-      },
-      "file_path": "tasks/scripts/backup.py"
+        "every": 1,
+        "unit": "minutes"
+      }
     },
     {
-      "name": "report_task",
+      "name": "file_daily",
       "type": "python",
+      "file_path": "tasks/scripts/sample.txt",
+      "enabled": false,
       "schedule": {
         "mode": "daily",
-        "time": "09:00"
-      },
-      "file_path": "tasks/scripts/report.py"
+        "time": "15:40"
+      }
     }
   ]
 }
