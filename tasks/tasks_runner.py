@@ -1,29 +1,32 @@
 from utils.logger import get_logger
+from tasks.file_task import FileTaskHandler
 
 logger = get_logger(__name__)
 
 
+TASK_HANDLERS = {
+    "file": FileTaskHandler,
+}
+
+
 def run_task(task_name):
-    logger.info(f"TASK STARTED | {task_name}")
+    logger.info(f"TASK RUNNER RECEIVED TASK | {task_name}")
 
     try:
-        if task_name == "email":
-            logger.info("Email task started...")
-            print("Email task is running...")
+        handler_class = TASK_HANDLERS.get(task_name)
 
-        elif task_name == "report":
-            logger.info("Report task started...")
-            print("Report task is running...")
-
-        elif task_name == "backup":
-            logger.info("Backup task started...")
-            print("Backup task is running...")
-
-        else:
+        if not handler_class:
             raise ValueError(f"Unknown task: {task_name}")
 
-        logger.info(f"TASK COMPLETED | {task_name}")
+        logger.info(f"TASK HANDLER FOUND | {task_name} | {handler_class.__name__}")
+
+        handler = handler_class()
+        result = handler.run()
+
+        logger.info(f"TASK RUNNER COMPLETED TASK | {task_name}")
+
+        return result
 
     except Exception as error:
-        logger.exception(f"TASK ERROR | {task_name} | Error: {error}")
+        logger.exception(f"TASK RUNNER ERROR | {task_name} | Error: {error}")
         print(f"Task failed: {error}")

@@ -1,0 +1,3 @@
+Hello this is my file task.
+This file is used for testing.
+Python task handler is working successfully.

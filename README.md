@@ -158,5 +158,25 @@ python main.py start --help
 python main.py run-task --help
 python main.py status
 ````
+@'
 
+## Task - 5: Task Handler Base + File Task
+
+This project now includes an extensible task-handler architecture.
+
+### Features Added
+
+- Base task handler class added.
+- File processing task handler added.
+- Task runner updated to use handler-based architecture.
+- File task validates and processes a sample text file.
+- Every action is logged in `logs/app.log`.
+
+### Files Added / Updated
+
+```text
+tasks/base_handler.py
+tasks/file_task.py
+tasks/tasks_runner.py
+tasks/scripts/sample.txt
 
