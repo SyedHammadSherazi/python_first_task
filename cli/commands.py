@@ -1,6 +1,7 @@
 import argparse
 
 from utils.logger import get_logger
+from utils.error_handler import handle_error
 from tasks.tasks_runner import run_task
 from watcher.file_monitor import start_file_monitor
 from scheduler.job_scheduler import (
@@ -28,15 +29,18 @@ Examples:
   python main.py start --every-minutes 5 --task-name file
   python main.py stop
   python main.py status
+  python main.py watch --path tasks/scripts --task-name file
   python main.py run-task file
+  python main.py run-task file --file-path tasks/scripts/sample.txt
   python main.py validate-config
-  python main.py validate-config --config config/tasks.yaml
+  python main.py validate-config --config config/tasks.json
   python main.py --version
 
 Description:
   start             Start the scheduler
   stop              Stop the scheduler
   status            Check scheduler status
+  watch             Watch folder and trigger task on file changes
   run-task          Run a specific task manually
   validate-config   Validate JSON/YAML config file
 """,
@@ -91,12 +95,14 @@ Description:
         default="file",
         help="Task name to run in scheduler. Default: file",
     )
+
     start_parser.add_argument(
         "--config",
         type=str,
         default="config/tasks.json",
         help="Scheduler config file path. Default: config/tasks.json",
     )
+
     subparsers.add_parser(
         "stop",
         help="Stop the scheduler",
@@ -108,17 +114,7 @@ Description:
         help="Check scheduler status",
         description="Check whether the scheduler is running or stopped.",
     )
-     
-    run_task_parser = subparsers.add_parser(
-        "run-task",
-        help="Run a specific task manually",
-        description="Run a task manually by providing its task name.",
-    )
 
-    run_task_parser.add_argument(
-        "task_name",
-        help="Name of the task to run. Example: file",
-    )
     watch_parser = subparsers.add_parser(
         "watch",
         help="Monitor files and trigger task on file changes",
@@ -144,6 +140,7 @@ Description:
         action="store_true",
         help="Watch subfolders also.",
     )
+
     watch_parser.add_argument(
         "--method",
         type=str,
@@ -158,6 +155,25 @@ Description:
         default=2,
         help="Polling interval in seconds when using --method polling. Default: 2",
     )
+
+    run_task_parser = subparsers.add_parser(
+        "run-task",
+        help="Run a specific task manually",
+        description="Run a task manually by providing its task name.",
+    )
+
+    run_task_parser.add_argument(
+        "task_name",
+        help="Name of the task to run. Example: file",
+    )
+
+    run_task_parser.add_argument(
+        "--file-path",
+        type=str,
+        default=None,
+        help="Optional file path for file task. Example: --file-path tasks/scripts/sample.txt",
+    )
+
     validate_parser = subparsers.add_parser(
         "validate-config",
         help="Validate JSON/YAML config file",
@@ -188,13 +204,18 @@ Description:
 
         elif args.command == "stop":
             logger.info("COMMAND STARTED | stop")
+
             stop_scheduler()
+
             logger.info("COMMAND COMPLETED | stop")
 
         elif args.command == "status":
             logger.info("COMMAND STARTED | status")
+
             get_scheduler_status()
+
             logger.info("COMMAND COMPLETED | status")
+
         elif args.command == "watch":
             logger.info(
                 f"COMMAND STARTED | watch | Path: {args.path} | "
@@ -211,16 +232,16 @@ Description:
 
             logger.info("COMMAND COMPLETED | watch")
 
-            start_file_monitor(
-                path=args.path,
-                task_name=args.task_name,
-                recursive=args.recursive,
-            )
-
-            logger.info("COMMAND COMPLETED | watch")
         elif args.command == "run-task":
             logger.info(f"COMMAND STARTED | run-task | Task: {args.task_name}")
-            run_task(args.task_name)
+
+            task_kwargs = {}
+
+            if args.file_path:
+                task_kwargs["file_path"] = args.file_path
+
+            run_task(args.task_name, **task_kwargs)
+
             logger.info(f"COMMAND COMPLETED | run-task | Task: {args.task_name}")
 
         elif args.command == "validate-config":
@@ -237,5 +258,10 @@ Description:
             parser.print_help()
 
     except Exception as error:
-        logger.exception(f"COMMAND ERROR | {args.command} | Error: {error}")
-        print(f"Error: {error}")
+        command_name = getattr(args, "command", "unknown")
+
+        handle_error(
+            error=error,
+            context=f"cli.commands:{command_name}",
+            exit_on_error=False,
+        )
