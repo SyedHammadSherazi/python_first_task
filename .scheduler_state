@@ -1,0 +1,4 @@
+running
+mode=config
+config=config/tasks.json
+pid=cli-process
