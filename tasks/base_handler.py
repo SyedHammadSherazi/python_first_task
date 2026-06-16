@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from utils.logger import get_logger
+from utils.email_sender import send_task_notification
 
 
 class BaseTaskHandler(ABC):
@@ -21,8 +22,8 @@ class BaseTaskHandler(ABC):
             self.logger.info(f"PROCESSING COMPLETED | {self.task_name}")
 
             self.on_success(result)
-            self.logger.info(f"TASK COMPLETED | {self.task_name}")
 
+            self.logger.info(f"TASK COMPLETED | {self.task_name}")
             return result
 
         except Exception as error:
@@ -40,5 +41,33 @@ class BaseTaskHandler(ABC):
     def on_success(self, result):
         self.logger.info(f"TASK SUCCESS | {self.task_name} | Result: {result}")
 
+        self._send_notification_safely(
+            status="completed",
+            details=result,
+        )
+
     def on_error(self, error):
         self.logger.error(f"TASK FAILED | {self.task_name} | Error: {error}")
+
+        self._send_notification_safely(
+            status="failed",
+            details=error,
+        )
+
+    def _send_notification_safely(self, status, details):
+        """
+        Email notification fail bhi ho jaye to main task crash nahi hona chahiye.
+        """
+
+        try:
+            send_task_notification(
+                task_name=self.task_name,
+                status=status,
+                details=details,
+            )
+
+        except Exception as email_error:
+            self.logger.exception(
+                f"TASK NOTIFICATION ERROR | {self.task_name} | "
+                f"status={status} | Error: {email_error}"
+            )
