@@ -5,9 +5,13 @@ from tasks.base_handler import BaseTaskHandler
 class FileTaskHandler(BaseTaskHandler):
     task_name = "file"
 
-    def __init__(self):
+    def __init__(self, file_path=None):
         super().__init__()
-        self.file_path = Path("tasks/scripts/sample.txt")
+
+        if file_path:
+            self.file_path = Path(file_path)
+        else:
+            self.file_path = Path("tasks/scripts/sample.txt")
 
     def validate(self):
         self.logger.info(f"CHECKING FILE PATH | {self.file_path}")

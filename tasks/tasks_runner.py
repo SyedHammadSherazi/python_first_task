@@ -9,7 +9,7 @@ TASK_HANDLERS = {
 }
 
 
-def run_task(task_name):
+def run_task(task_name, **kwargs):
     logger.info(f"TASK RUNNER RECEIVED TASK | {task_name}")
 
     try:
@@ -20,7 +20,7 @@ def run_task(task_name):
 
         logger.info(f"TASK HANDLER FOUND | {task_name} | {handler_class.__name__}")
 
-        handler = handler_class()
+        handler = handler_class(**kwargs)
         result = handler.run()
 
         logger.info(f"TASK RUNNER COMPLETED TASK | {task_name}")

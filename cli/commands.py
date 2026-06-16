@@ -2,6 +2,7 @@ import argparse
 
 from utils.logger import get_logger
 from tasks.tasks_runner import run_task
+from watcher.file_monitor import start_file_monitor
 from scheduler.job_scheduler import (
     start_scheduler,
     stop_scheduler,
@@ -107,7 +108,7 @@ Description:
         help="Check scheduler status",
         description="Check whether the scheduler is running or stopped.",
     )
-
+     
     run_task_parser = subparsers.add_parser(
         "run-task",
         help="Run a specific task manually",
@@ -118,7 +119,45 @@ Description:
         "task_name",
         help="Name of the task to run. Example: file",
     )
+    watch_parser = subparsers.add_parser(
+        "watch",
+        help="Monitor files and trigger task on file changes",
+        description="Watch a folder for file changes and run a task automatically.",
+    )
 
+    watch_parser.add_argument(
+        "--path",
+        type=str,
+        default="tasks/scripts",
+        help="Folder path to watch. Default: tasks/scripts",
+    )
+
+    watch_parser.add_argument(
+        "--task-name",
+        type=str,
+        default="file",
+        help="Task name to run when file changes. Default: file",
+    )
+
+    watch_parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help="Watch subfolders also.",
+    )
+    watch_parser.add_argument(
+        "--method",
+        type=str,
+        choices=["watchdog", "polling"],
+        default="watchdog",
+        help="File monitoring method. Options: watchdog, polling. Default: watchdog",
+    )
+
+    watch_parser.add_argument(
+        "--polling-interval",
+        type=int,
+        default=2,
+        help="Polling interval in seconds when using --method polling. Default: 2",
+    )
     validate_parser = subparsers.add_parser(
         "validate-config",
         help="Validate JSON/YAML config file",
@@ -156,7 +195,29 @@ Description:
             logger.info("COMMAND STARTED | status")
             get_scheduler_status()
             logger.info("COMMAND COMPLETED | status")
+        elif args.command == "watch":
+            logger.info(
+                f"COMMAND STARTED | watch | Path: {args.path} | "
+                f"Task: {args.task_name} | Method: {args.method}"
+            )
 
+            start_file_monitor(
+                path=args.path,
+                task_name=args.task_name,
+                recursive=args.recursive,
+                method=args.method,
+                polling_interval=args.polling_interval,
+            )
+
+            logger.info("COMMAND COMPLETED | watch")
+
+            start_file_monitor(
+                path=args.path,
+                task_name=args.task_name,
+                recursive=args.recursive,
+            )
+
+            logger.info("COMMAND COMPLETED | watch")
         elif args.command == "run-task":
             logger.info(f"COMMAND STARTED | run-task | Task: {args.task_name}")
             run_task(args.task_name)
